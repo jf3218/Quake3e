@@ -389,18 +389,21 @@ jobs:
 
       - name: Create binary archives
         run: |
-          7z a -r quake3e-linux-x86.zip            ./linux-x86/*
-          7z a -r quake3e-linux-x86_64.zip         ./linux-x86_64/*
-          7z a -r quake3e-linux-arm64.zip          ./linux-arm64/*
-          7z a -r quake3e-windows-mingw-x86.zip    ./windows-mingw-x86/*
-          7z a -r quake3e-windows-mingw-x86_64.zip ./windows-mingw-x86_64/*
-          7z a -r quake3e-windows-msvc-arm64.zip   ./windows-msvc-arm64/*
-          7z a -r quake3e-macos-x86_64.zip         ./macos-x86_64/*
-          7z a -r quake3e-macos-aarch64.zip        ./macos-aarch64/*
-#         7z a -r quake3e-linux-aarch64.zip        ./linux-aarch64/*
-#         7z a -r quake3e-linux-armv7.zip          ./linux-armv7/*
-#         7z a -r quake3e-windows-msvc-x86.zip     ./windows-msvc-x86/*
-#         7z a -r quake3e-windows-msvc-x86_64.zip  ./windows-msvc-x86_64/*
+          for dir in linux-x86 linux-x86_64 \
+                     linux-arm64 \
+                     windows-mingw-x86 windows-mingw-x86_64 \
+                     windows-msvc-arm64 \
+                     windows-msvc-x86 windows-msvc-x86_64 \
+                     macos-x86_64 macos-aarch64 
+                    # linux-aarch64 linux-armv7
+          do
+            if [ -d "$dir" ]; then
+              echo "Packaging $dir..."
+              7z a -r quake3e-$dir.zip ./$dir
+            else
+              echo "Skipping missing $dir"
+            fi
+          done
 
       - name: Create latest build
         uses: czietz/action-automatic-releases@latest
