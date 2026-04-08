@@ -2905,6 +2905,7 @@ __compile:
 				if ( proc_len == 0 ) {
 					// empty function, just return
 					emit_ret();
+					proc_base = -1;
 					ip += 2; // OP_PUSH + OP_LEAVE
 					break;
 				}
@@ -3268,20 +3269,6 @@ __compile:
 			case OP_SEX16:
 			case OP_NEGI:
 			case OP_BCOM:
-				if ( ci->op == OP_SEX8 || ci->op == OP_SEX16 ) {
-					// skip sign-extension for `if ( var == 0 )` tests if we already zero-extended
-					reg = rx_on_top();
-					if ( reg && (ci+1)->op == OP_CONST && (ci+1)->value == 0 && ( (ci+2)->op == OP_EQ || (ci+2)->op == OP_NE ) ) {
-						if ( !(ci+1)->jused && !(ci+2)->jused ) {
-							if ( ci->op == OP_SEX8 && reg->ext == Z_EXT8 ) {
-								break;
-							}
-							if ( ci->op == OP_SEX16 && reg->ext == Z_EXT16 ) {
-								break;
-							}
-						}
-					}
-				}
 				rx[0] = load_rx_opstack( R_EAX ); // eax = *opstack
 				switch ( ci->op ) {
 					case OP_SEX8:  emit_sex8( rx[0], rx[0] ); break;	// movsx eax, al
@@ -3583,7 +3570,7 @@ __compile:
 #ifdef VM_X86_MMAP
 	if ( mprotect( vm->codeBase.ptr, vm->codeSize, PROT_READ|PROT_EXEC ) ) {
 		VM_Destroy_Compiled( vm );
-		Com_Printf( S_COLOR_YELLOW "VM_CompileX86: mprotect failed\n" );
+		Com_Printf( S_COLOR_WARNING "VM_CompileX86: mprotect failed\n" );
 		return qfalse;
 	}
 #elif _WIN32
@@ -3593,7 +3580,7 @@ __compile:
 		// remove write permissions.
 		if ( !VirtualProtect( vm->codeBase.ptr, vm->codeSize, PAGE_EXECUTE_READ, &oldProtect ) ) {
 			VM_Destroy_Compiled( vm );
-			Com_Printf( S_COLOR_YELLOW "%s(%s): VirtualProtect failed\n", __func__, vm->name );
+			Com_Printf( S_COLOR_WARNING "%s(%s): VirtualProtect failed\n", __func__, vm->name );
 			return qfalse;
 		}
 	}
